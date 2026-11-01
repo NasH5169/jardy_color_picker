@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Framework-only theme: works whatever the host app theme is (AppCompat, Material, plain). -->
+    <style name="JardyColorPicker.Dialog" parent="@android:style/Theme.Material.Light.Dialog.Alert" />
+
+    <style name="JardyColorPicker.Hex" parent="@android:style/Widget.Material.EditText">
+        <item name="android:inputType">textCapCharacters|textNoSuggestions</item>
+        <item name="android:maxLength">9</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:imeOptions">actionDone</item>
+        <item name="android:digits">#0123456789abcdefABCDEF</item>
+        <item name="android:typeface">monospace</item>
+    </style>
+</resources>

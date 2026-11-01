@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="jcp_hue">Hue</string>
+    <string name="jcp_alpha">Opacity</string>
+    <string name="jcp_saturation_value">Saturation and brightness</string>
+    <string name="jcp_hex_hint">#AARRGGBB</string>
+</resources>

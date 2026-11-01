@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:paddingStart="24dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="24dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:orientation="vertical">
+
+        <!-- Row 2: square + hue bar + alpha bar. Bars take the height of the square. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:orientation="horizontal">
+
+            <com.jardy.colorpicker.SaturationValueView
+                android:id="@+id/jcp_sat_val"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:contentDescription="@string/jcp_saturation_value" />
+
+            <com.jardy.colorpicker.HueBarView
+                android:id="@+id/jcp_hue"
+                android:layout_width="36dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="12dp"
+                android:contentDescription="@string/jcp_hue" />
+
+            <com.jardy.colorpicker.AlphaBarView
+                android:id="@+id/jcp_alpha"
+                android:layout_width="36dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="12dp"
+                android:contentDescription="@string/jcp_alpha" />
+        </LinearLayout>
+
+        <!-- Row 3: preview + hex field -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <com.jardy.colorpicker.ColorPreviewView
+                android:id="@+id/jcp_preview"
+                android:layout_width="72dp"
+                android:layout_height="36dp" />
+
+            <EditText
+                android:id="@+id/jcp_hex"
+                style="@style/JardyColorPicker.Hex"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_weight="1"
+                android:hint="@string/jcp_hex_hint"
+                android:importantForAutofill="no" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

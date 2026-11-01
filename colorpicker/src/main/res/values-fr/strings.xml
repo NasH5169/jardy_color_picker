@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="jcp_hue">Teinte</string>
+    <string name="jcp_alpha">Opacité</string>
+    <string name="jcp_saturation_value">Saturation et luminosité</string>
+</resources>
