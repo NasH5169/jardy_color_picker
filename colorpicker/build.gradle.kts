@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.jardy.colorpicker"
-    compileSdk = 37
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24
@@ -40,7 +40,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.jardy"
                 artifactId = "colorpicker"
-                version = "1.0.0"
+                version = "1.0.2"
             }
         }
     }
