@@ -40,7 +40,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.jardy"
                 artifactId = "colorpicker"
-                version = "1.0.2"
+                version = "1.1.0"
             }
         }
     }

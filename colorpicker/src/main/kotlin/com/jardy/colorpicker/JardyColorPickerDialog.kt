@@ -3,7 +3,11 @@ package com.jardy.colorpicker
 import android.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
+import android.content.res.ColorStateList
 import android.graphics.Color
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
 import android.text.Editable
 import android.text.InputFilter
 import android.text.TextWatcher
@@ -31,6 +35,9 @@ class JardyColorPickerDialog private constructor(private val builder: Builder) {
         internal var initialColor: Int = Color.RED
         internal var alphaEnabled = true
         internal var themeResId = R.style.JardyColorPicker_Dialog
+        internal var backgroundColor: Int? = null
+        internal var buttonTextColor: Int? = null
+        internal var textColor: Int? = null
         internal var onSelected: ((Int) -> Unit)? = null
         internal var onCancelled: (() -> Unit)? = null
 
@@ -40,6 +47,15 @@ class JardyColorPickerDialog private constructor(private val builder: Builder) {
 
         /** When false, the alpha bar is hidden and the result is always fully opaque. */
         fun setAlphaEnabled(enabled: Boolean) = apply { alphaEnabled = enabled }
+
+        /** Dialog background color (keeps the theme's rounded shape). Null restores the theme default. */
+        fun setBackgroundColor(color: Int?) = apply { backgroundColor = color }
+
+        /** Text color of the "Cancel" and "OK" buttons. Null restores the theme default. */
+        fun setButtonTextColor(color: Int?) = apply { buttonTextColor = color }
+
+        /** Color of the title and of the hex field. Null restores the theme default. */
+        fun setTextColor(color: Int?) = apply { textColor = color }
 
         /** Replaces the default theme; it should derive from a framework Material dialog theme. */
         fun setTheme(themeResId: Int) = apply { this.themeResId = themeResId }
@@ -119,8 +135,20 @@ class JardyColorPickerDialog private constructor(private val builder: Builder) {
 
         refresh(false)
 
-        return AlertDialog.Builder(themed)
-            .setTitle(builder.title)
+        builder.textColor?.let { c ->
+            hex.setTextColor(c)
+            hex.setHintTextColor(Color.argb(128, Color.red(c), Color.green(c), Color.blue(c)))
+            hex.backgroundTintList = ColorStateList.valueOf(c)
+        }
+
+        val title = builder.title?.let { t ->
+            builder.textColor?.let { c ->
+                SpannableString(t).apply { setSpan(ForegroundColorSpan(c), 0, length, Spanned.SPAN_INCLUSIVE_INCLUSIVE) }
+            } ?: t
+        }
+
+        val dialog = AlertDialog.Builder(themed)
+            .setTitle(title)
             .setView(content)
             .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
                 builder.onSelected?.invoke(currentColor())
@@ -130,5 +158,14 @@ class JardyColorPickerDialog private constructor(private val builder: Builder) {
             }
             .setOnCancelListener { builder.onCancelled?.invoke() }
             .create()
+
+        dialog.setOnShowListener {
+            builder.backgroundColor?.let { dialog.window?.decorView?.background?.mutate()?.setTint(it) }
+            builder.buttonTextColor?.let {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(it)
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(it)
+            }
+        }
+        return dialog
     }
 }

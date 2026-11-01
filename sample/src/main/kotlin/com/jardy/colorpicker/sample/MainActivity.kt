@@ -28,20 +28,33 @@ class MainActivity : AppCompatActivity() {
             setOnClickListener { pick() }
         }
 
+        val customButton = Button(this).apply {
+            text = "Version personnalisée"
+            setOnClickListener { pick(custom = true) }
+        }
+
         setContentView(LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             addView(swatch)
             addView(label)
             addView(button)
+            addView(customButton)
         })
         update()
     }
 
-    private fun pick() {
+    private fun pick(custom: Boolean = false) {
         JardyColorPickerDialog.Builder(this)
             .setTitle("Ligne de navigation")
             .setInitialColor(color)
+            .apply {
+                if (custom) {
+                    setBackgroundColor(Color.parseColor("#12263A"))
+                    setTextColor(Color.parseColor("#F2E3C6"))
+                    setButtonTextColor(Color.parseColor("#F2E3C6"))
+                }
+            }
             .setOnColorSelected { color = it; update() }
             .show()
     }
