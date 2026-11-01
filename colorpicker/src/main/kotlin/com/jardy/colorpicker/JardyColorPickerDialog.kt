@@ -38,6 +38,8 @@ class JardyColorPickerDialog private constructor(private val builder: Builder) {
         internal var backgroundColor: Int? = null
         internal var buttonTextColor: Int? = null
         internal var textColor: Int? = null
+        internal var titleColor: Int? = null
+        internal var hexTextColor: Int? = null
         internal var onSelected: ((Int) -> Unit)? = null
         internal var onCancelled: (() -> Unit)? = null
 
@@ -54,8 +56,14 @@ class JardyColorPickerDialog private constructor(private val builder: Builder) {
         /** Text color of the "Cancel" and "OK" buttons. Null restores the theme default. */
         fun setButtonTextColor(color: Int?) = apply { buttonTextColor = color }
 
-        /** Color of the title and of the hex field. Null restores the theme default. */
+        /** Color of the title and of the hex field, unless overridden by the two setters below. */
         fun setTextColor(color: Int?) = apply { textColor = color }
+
+        /** Title color only. Takes precedence over [setTextColor]. */
+        fun setTitleColor(color: Int?) = apply { titleColor = color }
+
+        /** Hex field color only (text, hint and underline). Takes precedence over [setTextColor]. */
+        fun setHexTextColor(color: Int?) = apply { hexTextColor = color }
 
         /** Replaces the default theme; it should derive from a framework Material dialog theme. */
         fun setTheme(themeResId: Int) = apply { this.themeResId = themeResId }
@@ -135,14 +143,14 @@ class JardyColorPickerDialog private constructor(private val builder: Builder) {
 
         refresh(false)
 
-        builder.textColor?.let { c ->
+        (builder.hexTextColor ?: builder.textColor)?.let { c ->
             hex.setTextColor(c)
             hex.setHintTextColor(Color.argb(128, Color.red(c), Color.green(c), Color.blue(c)))
             hex.backgroundTintList = ColorStateList.valueOf(c)
         }
 
         val title = builder.title?.let { t ->
-            builder.textColor?.let { c ->
+            (builder.titleColor ?: builder.textColor)?.let { c ->
                 SpannableString(t).apply { setSpan(ForegroundColorSpan(c), 0, length, Spanned.SPAN_INCLUSIVE_INCLUSIVE) }
             } ?: t
         }
