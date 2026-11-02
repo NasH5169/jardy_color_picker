@@ -42,7 +42,13 @@ class SaturationValueView @JvmOverloads constructor(
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val w = getDefaultSize(suggestedMinimumWidth, widthMeasureSpec)
-        setMeasuredDimension(w, w)
+        // Square by default; an exact height (landscape layout) is honored as is.
+        val h = if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.EXACTLY) {
+            MeasureSpec.getSize(heightMeasureSpec)
+        } else {
+            w
+        }
+        setMeasuredDimension(w, h)
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) = rebuildShader()
