@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
 import android.content.res.ColorStateList
+import android.content.res.Configuration
 import android.graphics.Color
 import android.text.SpannableString
 import android.text.Spanned
@@ -14,6 +15,7 @@ import android.text.TextWatcher
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.widget.EditText
+import android.widget.FrameLayout
 
 /**
  * Color picker dialog (#AARRGGBB). It carries its own framework-based theme, so it
@@ -77,20 +79,12 @@ class JardyColorPickerDialog private constructor(private val builder: Builder) {
 
     private fun create(): AlertDialog {
         val themed = ContextThemeWrapper(builder.context, builder.themeResId)
-        // Decided from the real screen size rather than a `-land` resource qualifier, which would be
-        // missed when the caller's context has an undefined orientation (e.g. a locale-wrapped context).
-        val metrics = builder.context.resources.displayMetrics
-        val layoutId = if (metrics.widthPixels > metrics.heightPixels) {
-            R.layout.jcp_dialog_content_land
-        } else {
-            R.layout.jcp_dialog_content
-        }
-        val content = LayoutInflater.from(themed).inflate(layoutId, null)
-        val satVal = content.findViewById<SaturationValueView>(R.id.jcp_sat_val)
-        val hueBar = content.findViewById<HueBarView>(R.id.jcp_hue)
-        val alphaBar = content.findViewById<AlphaBarView>(R.id.jcp_alpha)
-        val preview = content.findViewById<ColorPreviewView>(R.id.jcp_preview)
-        val hex = content.findViewById<EditText>(R.id.jcp_hex)
+        val host = ContentHost(themed)
+        lateinit var satVal: SaturationValueView
+        lateinit var hueBar: HueBarView
+        lateinit var alphaBar: AlphaBarView
+        lateinit var preview: ColorPreviewView
+        lateinit var hex: EditText
 
         // HSV is kept as the source of truth so hue survives saturation/value hitting 0.
         val hsv = FloatArray(3)
@@ -122,40 +116,61 @@ class JardyColorPickerDialog private constructor(private val builder: Builder) {
             alpha = if (builder.alphaEnabled) Color.alpha(color) else 255
         }
 
-        load(builder.initialColor)
-        if (!builder.alphaEnabled) {
-            alphaBar.visibility = android.view.View.GONE
-            hex.filters = arrayOf(InputFilter.LengthFilter(7))
-        }
+        // (Re)builds the content for the given orientation; the color state above is kept,
+        // so the dialog can switch layout while open (e.g. when the activity handles configChanges).
+        fun inflateContent(landscape: Boolean) {
+            host.removeAllViews()
+            val layoutId = if (landscape) R.layout.jcp_dialog_content_land else R.layout.jcp_dialog_content
+            val content = LayoutInflater.from(themed).inflate(layoutId, host, false)
+            host.addView(content)
+            satVal = content.findViewById(R.id.jcp_sat_val)
+            hueBar = content.findViewById(R.id.jcp_hue)
+            alphaBar = content.findViewById(R.id.jcp_alpha)
+            preview = content.findViewById(R.id.jcp_preview)
+            hex = content.findViewById(R.id.jcp_hex)
 
-        satVal.onChanged = { s, v -> hsv[1] = s; hsv[2] = v; refresh(false) }
-        hueBar.onFractionChanged = { hsv[0] = hueBar.hue.coerceAtMost(359.99f); refresh(false) }
-        alphaBar.onFractionChanged = { alpha = alphaBar.alphaValue; refresh(false) }
-
-        hex.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
-            override fun afterTextChanged(s: Editable) {
-                if (updatingHex) return
-                val text = s.toString()
-                val expected = if (builder.alphaEnabled) 9 else 7
-                if (text.length != expected || !text.startsWith("#")) return
-                val color = runCatching { Color.parseColor(text) }.getOrNull() ?: return
-                // Keep the hue when the typed color is grey/black, where it is undefined.
-                val previousHue = hsv[0]
-                load(color)
-                if (hsv[1] == 0f || hsv[2] == 0f) hsv[0] = previousHue
-                refresh(true)
+            if (!builder.alphaEnabled) {
+                alphaBar.visibility = android.view.View.GONE
+                hex.filters = arrayOf(InputFilter.LengthFilter(7))
             }
-        })
 
-        refresh(false)
+            satVal.onChanged = { s, v -> hsv[1] = s; hsv[2] = v; refresh(false) }
+            hueBar.onFractionChanged = { hsv[0] = hueBar.hue.coerceAtMost(359.99f); refresh(false) }
+            alphaBar.onFractionChanged = { alpha = alphaBar.alphaValue; refresh(false) }
 
-        (builder.hexTextColor ?: builder.textColor)?.let { c ->
-            hex.setTextColor(c)
-            hex.setHintTextColor(Color.argb(128, Color.red(c), Color.green(c), Color.blue(c)))
-            hex.backgroundTintList = ColorStateList.valueOf(c)
+            hex.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+                override fun afterTextChanged(s: Editable) {
+                    if (updatingHex) return
+                    val text = s.toString()
+                    val expected = if (builder.alphaEnabled) 9 else 7
+                    if (text.length != expected || !text.startsWith("#")) return
+                    val color = runCatching { Color.parseColor(text) }.getOrNull() ?: return
+                    // Keep the hue when the typed color is grey/black, where it is undefined.
+                    val previousHue = hsv[0]
+                    load(color)
+                    if (hsv[1] == 0f || hsv[2] == 0f) hsv[0] = previousHue
+                    refresh(true)
+                }
+            })
+
+            (builder.hexTextColor ?: builder.textColor)?.let { c ->
+                hex.setTextColor(c)
+                hex.setHintTextColor(Color.argb(128, Color.red(c), Color.green(c), Color.blue(c)))
+                hex.backgroundTintList = ColorStateList.valueOf(c)
+            }
+
+            refresh(false)
         }
+
+        // Decided from the real screen size rather than a `-land` resource qualifier, which would be
+        // missed when the caller's context has an undefined orientation (e.g. a locale-wrapped context).
+        val metrics = builder.context.resources.displayMetrics
+        host.landscape = metrics.widthPixels > metrics.heightPixels
+        host.onLandscapeChanged = { inflateContent(it) }
+        load(builder.initialColor)
+        inflateContent(host.landscape)
 
         val title = builder.title?.let { t ->
             (builder.titleColor ?: builder.textColor)?.let { c ->
@@ -165,7 +180,7 @@ class JardyColorPickerDialog private constructor(private val builder: Builder) {
 
         val dialog = AlertDialog.Builder(themed)
             .setTitle(title)
-            .setView(content)
+            .setView(host)
             .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
                 builder.onSelected?.invoke(currentColor())
             }
@@ -183,5 +198,20 @@ class JardyColorPickerDialog private constructor(private val builder: Builder) {
             }
         }
         return dialog
+    }
+}
+
+/** Holds the dialog content and reports orientation changes, even when the activity handles them itself. */
+private class ContentHost(context: Context) : FrameLayout(context) {
+    var landscape = false
+    var onLandscapeChanged: ((Boolean) -> Unit)? = null
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        val land = newConfig.screenWidthDp > newConfig.screenHeightDp
+        if (land != landscape) {
+            landscape = land
+            onLandscapeChanged?.invoke(land)
+        }
     }
 }

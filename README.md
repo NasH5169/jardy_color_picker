@@ -28,7 +28,7 @@ dependencyResolutionManagement {
 
 // build.gradle.kts (module)
 dependencies {
-    implementation("com.github.NasH5169:jardy_color_picker:1.1.3")
+    implementation("com.github.NasH5169:jardy_color_picker:1.1.4")
 }
 ```
 
@@ -90,6 +90,7 @@ Passing `R.color.background` directly would be read as a color value and render 
 ## Notes
 
 - The dialog is a plain `AlertDialog`: it is dismissed when the activity is recreated (for example on rotation), so reopen it if needed.
+- If your activity handles orientation changes itself (`android:configChanges`), the open dialog switches between its portrait and landscape layouts on rotation, keeping the current color.
 - There is no live callback while the user drags the sliders; the result is delivered on OK only.
 
 ## Sample app
