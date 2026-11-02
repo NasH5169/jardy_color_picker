@@ -28,7 +28,7 @@ dependencyResolutionManagement {
 
 // build.gradle.kts (module)
 dependencies {
-    implementation("com.github.NasH5169:jardy_color_picker:1.1.2")
+    implementation("com.github.NasH5169:jardy_color_picker:1.1.3")
 }
 ```
 

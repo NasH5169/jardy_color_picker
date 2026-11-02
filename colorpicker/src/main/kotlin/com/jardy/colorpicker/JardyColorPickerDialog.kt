@@ -77,7 +77,15 @@ class JardyColorPickerDialog private constructor(private val builder: Builder) {
 
     private fun create(): AlertDialog {
         val themed = ContextThemeWrapper(builder.context, builder.themeResId)
-        val content = LayoutInflater.from(themed).inflate(R.layout.jcp_dialog_content, null)
+        // Decided from the real screen size rather than a `-land` resource qualifier, which would be
+        // missed when the caller's context has an undefined orientation (e.g. a locale-wrapped context).
+        val metrics = builder.context.resources.displayMetrics
+        val layoutId = if (metrics.widthPixels > metrics.heightPixels) {
+            R.layout.jcp_dialog_content_land
+        } else {
+            R.layout.jcp_dialog_content
+        }
+        val content = LayoutInflater.from(themed).inflate(layoutId, null)
         val satVal = content.findViewById<SaturationValueView>(R.id.jcp_sat_val)
         val hueBar = content.findViewById<HueBarView>(R.id.jcp_hue)
         val alphaBar = content.findViewById<AlphaBarView>(R.id.jcp_alpha)
