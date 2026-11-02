@@ -21,8 +21,17 @@ class MainActivity : AppCompatActivity() {
         color = savedInstanceState?.getInt("color") ?: color
         val dp = resources.displayMetrics.density
 
-        swatch = View(this).apply { layoutParams = LinearLayout.LayoutParams((200 * dp).toInt(), (80 * dp).toInt()) }
-        label = TextView(this).apply { textSize = 18f; setPadding(0, (12 * dp).toInt(), 0, (12 * dp).toInt()) }
+        swatch = View(this).apply {
+            layoutParams = LinearLayout.LayoutParams((200 * dp).toInt(), (80 * dp).toInt())
+        }
+        label = TextView(this).apply {
+            textSize = 18f; setPadding(
+            0,
+            (12 * dp).toInt(),
+            0,
+            (12 * dp).toInt()
+        )
+        }
         val button = Button(this).apply {
             text = "Choisir une couleur"
             setOnClickListener { pick() }
